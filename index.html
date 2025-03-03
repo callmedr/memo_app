@@ -5,111 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firebase 메모장</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
         body {
+            font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             background-color: #f4f4f4;
         }
-
-        .container {
+        #app {
             width: 90%;
             max-width: 400px;
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
         textarea {
             width: 100%;
             height: 100px;
+            margin-bottom: 10px;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             resize: none;
-            font-size: 16px;
         }
-
         button {
-            width: 100%;
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            background: #007bff;
+            background-color: #007bff;
             color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
             cursor: pointer;
         }
-
         button:hover {
-            background: #0056b3;
+            background-color: #0056b3;
         }
-
         ul {
-            list-style: none;
-            margin-top: 20px;
+            list-style-type: none;
             padding: 0;
         }
-
         li {
-            background: #ffffff;
+            background: #fff;
             margin: 10px 0;
             padding: 10px;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column; /* 세로 정렬 */
-            align-items: flex-start;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: left;
         }
-
         .delete-btn {
-            background: #f8d7da;
-            color: #721c24;
-            border: none;
-            padding: 5px 8px;
-            font-size: 14px;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 5px; /* 버튼과 텍스트 사이 여백 */
-            align-self: flex-end; /* 버튼을 오른쪽 정렬 */
-            transition: background 0.3s, transform 0.2s;
+            background-color: #ff4d4d;
+            margin-top: 5px;
+            width: 100%;
         }
-
         .delete-btn:hover {
-            background: #f5c6cb;
-            transform: scale(1.1);
+            background-color: #cc0000;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>메모장</h1>
-        <textarea id="memoInput" placeholder="메모를 입력하세요"></textarea>
+    <div id="app">
+        <h2>📒 Firebase 메모장</h2>
+        <textarea id="memoInput" placeholder="메모를 입력하세요..."></textarea>
         <button id="saveMemo">저장</button>
         <ul id="memoList"></ul>
     </div>
 
     <script type="module">
+        // ✅ Firebase SDK 불러오기
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } 
+        from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
+        // ✅ Firebase 설정
         const firebaseConfig = {
             apiKey: "AIzaSyBo10R6BRgmNGzaPn-Yx27COT1K8UxXRU4",
             authDomain: "test-319c5.firebaseapp.com",
@@ -120,41 +90,53 @@
             measurementId: "G-1Q02ECYM77"
         };
 
+        // ✅ Firebase 초기화
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // ✅ DOM 요소 가져오기
         const memoInput = document.getElementById("memoInput");
         const saveMemo = document.getElementById("saveMemo");
         const memoList = document.getElementById("memoList");
 
+        // ✅ 메모 저장 (작성 시간도 함께 저장)
         saveMemo.addEventListener("click", async () => {
             const text = memoInput.value.trim();
             if (text) {
-                await addDoc(collection(db, "memos"), { text });
-                memoInput.value = "";
+                await addDoc(collection(db, "memos"), { 
+                    text, 
+                    createdAt: serverTimestamp() // ⏳ 작성 시간 추가
+                });
+                memoInput.value = ""; // 입력창 비우기
             }
         });
 
-        onSnapshot(collection(db, "memos"), (snapshot) => {
-            memoList.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const li = document.createElement("li");
+        // ✅ 메모 불러오기 (최신순 정렬)
+        onSnapshot(
+            query(collection(db, "memos"), orderBy("createdAt", "desc")), // 최신 메모가 위로
+            (snapshot) => {
+                memoList.innerHTML = "";
+                snapshot.forEach((docItem) => {
+                    const memoData = docItem.data();
+                    
+                    const li = document.createElement("li");
 
-                const textDiv = document.createElement("div");
-                textDiv.textContent = doc.data().text;
+                    const textDiv = document.createElement("div");
+                    textDiv.textContent = memoData.text;
 
-                const deleteBtn = document.createElement("button");
-                deleteBtn.textContent = "삭제";
-                deleteBtn.classList.add("delete-btn");
-                deleteBtn.addEventListener("click", async () => {
-                    await deleteDoc(doc(db, "memos", doc.id));
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.textContent = "삭제";
+                    deleteBtn.classList.add("delete-btn");
+                    deleteBtn.addEventListener("click", async () => {
+                        await deleteDoc(doc(db, "memos", docItem.id));
+                    });
+
+                    li.appendChild(textDiv);
+                    li.appendChild(deleteBtn);
+                    memoList.appendChild(li);
                 });
-
-                li.appendChild(textDiv);
-                li.appendChild(deleteBtn);
-                memoList.appendChild(li);
-            });
-        });
+            }
+        );
     </script>
 </body>
 </html>
