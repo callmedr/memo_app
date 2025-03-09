@@ -27,43 +27,59 @@
             text-align: center;
             display: flex;
             flex-direction: column;
-            align-items: center; /* ⬅ 중앙 정렬 */
+            align-items: center;
+            height: 90vh;
+        }
+
+        /* 🌟 제목과 입력창을 상단 배치 */
+        #header {
+            width: 100%;
+            text-align: center;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
         }
 
         /* 🌟 메모 입력창 */
+        #input-container {
+            width: 100%;
+        }
+
         textarea {
             width: 100%;
-            height: 100px;
-            margin-bottom: 10px;
+            height: 80px;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             resize: none;
-            text-align: center; /* ⬅ 입력한 텍스트도 중앙 정렬 */
+            text-align: center;
         }
 
-        /* 🌟 버튼 스타일 */
-        button {
+        /* 🌟 저장 버튼 */
+        #saveMemo {
+            width: 100%;
+            margin-top: 5px;
             background-color: #007bff;
             color: white;
             border: none;
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
         }
 
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        /* 🌟 메모 리스트 스타일 */
-        ul {
+        /* 🌟 메모 리스트 */
+        #memoList {
             list-style-type: none;
             padding: 0;
             width: 100%;
+            margin-top: 20px;
+            max-height: 60vh; /* 📌 스크롤 가능하도록 제한 */
+            overflow-y: auto; /* 📌 긴 목록도 볼 수 있도록 */
         }
 
+        /* 🌟 개별 메모 */
         li {
             background: #fff;
             margin: 10px 0;
@@ -88,9 +104,13 @@
 </head>
 <body>
     <div id="app">
-        <h2>📒 Firebase 메모장</h2>
-        <textarea id="memoInput" placeholder="메모를 입력하세요..."></textarea>
-        <button id="saveMemo">저장</button>
+        <div id="header">
+            <h2>📒 Firebase 메모장</h2>
+            <div id="input-container">
+                <textarea id="memoInput" placeholder="메모를 입력하세요..."></textarea>
+                <button id="saveMemo">저장</button>
+            </div>
+        </div>
         <ul id="memoList"></ul>
     </div>
 
@@ -132,7 +152,7 @@
             }
         });
 
-        // ✅ 메모 불러오기 (최신순 정렬)
+        // ✅ 메모 불러오기 (최신순으로 표시)
         onSnapshot(
             query(collection(db, "memos"), orderBy("createdAt", "desc")), // 최신 메모가 위로
             (snapshot) => {
