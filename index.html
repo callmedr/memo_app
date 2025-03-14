@@ -8,15 +8,16 @@
         /* 🌟 기본 스타일 */
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             background-color: #f4f4f4;
             margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
         }
 
-        /* 🌟 메모장 전체 박스 */
+        /* 🌟 메모장 전체 */
         #app {
             width: 90%;
             max-width: 400px;
@@ -24,29 +25,18 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 90vh;
+            box-sizing: border-box;
         }
 
-        /* 🌟 제목과 입력창을 상단 배치 */
-        #header {
-            width: 100%;
-            text-align: center;
-            padding-bottom: 10px;
-        }
-
+        /* 🌟 제목 고정 */
         h2 {
-            margin-bottom: 10px;
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         /* 🌟 메모 입력창 */
-        #input-container {
-            width: 100%;
-        }
-
         textarea {
             width: 100%;
             height: 80px;
@@ -55,39 +45,40 @@
             border-radius: 5px;
             resize: none;
             text-align: center;
+            box-sizing: border-box;
+            margin-bottom: 10px;
         }
 
         /* 🌟 저장 버튼 */
-        #saveMemo {
-            width: 100%;
-            margin-top: 5px;
+        button {
             background-color: #007bff;
             color: white;
             border: none;
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #0056b3;
         }
 
         /* 🌟 메모 리스트 */
-        #memoList {
+        ul {
             list-style-type: none;
             padding: 0;
-            width: 100%;
-            margin-top: 20px;
-            max-height: 60vh; /* 📌 스크롤 가능하도록 제한 */
-            overflow-y: auto; /* 📌 긴 목록도 볼 수 있도록 */
+            overflow-y: auto;
+            max-height: 60vh; /* 화면 60% 높이만큼 메모 리스트 표시 */
         }
 
-        /* 🌟 개별 메모 */
         li {
             background: #fff;
             margin: 10px 0;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: left;
-            width: 100%;
         }
 
         /* 🌟 삭제 버튼 */
@@ -104,13 +95,9 @@
 </head>
 <body>
     <div id="app">
-        <div id="header">
-            <h2>📒 Firebase 메모장</h2>
-            <div id="input-container">
-                <textarea id="memoInput" placeholder="메모를 입력하세요..."></textarea>
-                <button id="saveMemo">저장</button>
-            </div>
-        </div>
+        <h2>📒 Firebase 메모장</h2>
+        <textarea id="memoInput" placeholder="메모를 입력하세요..."></textarea>
+        <button id="saveMemo">저장</button>
         <ul id="memoList"></ul>
     </div>
 
@@ -140,26 +127,25 @@
         const saveMemo = document.getElementById("saveMemo");
         const memoList = document.getElementById("memoList");
 
-        // ✅ 메모 저장 (작성 시간도 함께 저장)
+        // ✅ 메모 저장
         saveMemo.addEventListener("click", async () => {
             const text = memoInput.value.trim();
             if (text) {
                 await addDoc(collection(db, "memos"), { 
                     text, 
-                    createdAt: serverTimestamp() // ⏳ 작성 시간 추가
+                    createdAt: serverTimestamp() 
                 });
                 memoInput.value = ""; // 입력창 비우기
             }
         });
 
-        // ✅ 메모 불러오기 (최신순으로 표시)
+        // ✅ 메모 실시간 불러오기 (최신순)
         onSnapshot(
-            query(collection(db, "memos"), orderBy("createdAt", "desc")), // 최신 메모가 위로
+            query(collection(db, "memos"), orderBy("createdAt", "desc")),
             (snapshot) => {
                 memoList.innerHTML = "";
                 snapshot.forEach((docItem) => {
                     const memoData = docItem.data();
-                    
                     const li = document.createElement("li");
 
                     const textDiv = document.createElement("div");
